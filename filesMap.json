@@ -1,6 +1,1 @@
-[
-    {
-        "SourcePath": "/tmp/watchme",
-        "DestPath": "/tmp/backup/watchme"
-    }
-]
+{"/tmp/watchme" : "/tmp/backup/watchme" }

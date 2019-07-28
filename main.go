@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
@@ -20,6 +24,12 @@ type (
 	}
 )
 
+var (
+	watchFile  = flag.String("f", "./filesMap.json", "a json file with the list of files")
+	sourceFile = flag.String("src", "", "the source file path")
+	destFile   = flag.String("dst", "", "the destination file path used only with `src`")
+)
+
 func newFwatchError(err error, format string, a ...interface{}) fwatchError {
 	return fwatchError{
 		error:  err,
@@ -27,8 +37,33 @@ func newFwatchError(err error, format string, a ...interface{}) fwatchError {
 	}
 }
 
+func (f fwatchError) String() string {
+	return fmt.Sprintf("%s | %v", f.Reason, f.error)
+}
+
 func main() {
-	fmt.Println("Starting to watch your files 👀")
+	flag.Parse()
+	watchMap := map[string]string{}
+
+	if watchFile != nil {
+		manifestFile, err := os.Open(*watchFile)
+		if err != nil {
+			log.Println(newFwatchError(err, "Error openning manifest file"))
+			return
+		}
+		bs, err := ioutil.ReadAll(manifestFile)
+		if err != nil {
+			log.Println(newFwatchError(err, "Error reading manifest file"))
+			return
+		}
+		err = json.Unmarshal(bs, &watchMap)
+		if err != nil {
+			log.Println(newFwatchError(err, "Error parsing manifest file"))
+			return
+		}
+	}
+
+	log.Println("Starting to watch files")
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		fmt.Println("ERROR", err)
@@ -37,21 +72,17 @@ func main() {
 
 	done := make(chan bool)
 
-	watchMap := map[string]string{
-		"/tmp/watchme": "/tmp/backup/watchme",
-	}
-
 	go func() {
 		for {
 			select {
 			// watch for events
 			case event := <-watcher.Events:
-				fmt.Printf("fileName %s: Op %v", event.Name, event.Op)
+				log.Printf("fileName %s: Op %v", event.Name, event.Op)
 				go copyFile(event.Name, watchMap[event.Name])
 
 				// watch for errors
 			case err := <-watcher.Errors:
-				fmt.Println("ERROR", err)
+				log.Println("ERROR", err)
 			}
 		}
 	}()
