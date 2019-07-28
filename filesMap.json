@@ -1,0 +1,6 @@
+[
+    {
+        "SourcePath": "/tmp/watchme",
+        "DestPath": "/tmp/backup/watchme"
+    }
+]
