@@ -1,4 +1,4 @@
-module github.com/edwardishaq/fsnotify_try
+module github.com/edwardishaq/filesWatcher
 
 go 1.12
 
