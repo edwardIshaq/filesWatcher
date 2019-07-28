@@ -10,3 +10,6 @@ to load it to launchd do:
         a json file with the list of files (default "./filesMap.json")
   -src string
         the source file path```
+
+Using this for [dotFiles](https://github.com/edwardIshaq/dotFiles)
+
